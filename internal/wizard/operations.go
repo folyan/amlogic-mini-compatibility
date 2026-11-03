@@ -159,6 +159,7 @@ func (w *wizard) restore(ctx context.Context) (err error) {
 	w.line("  Отключите USB и подключите блок питания устройства.")
 	return nil
 }
+
 // restoreStock writes stock partitions from a plain stock/ folder next to the
 // program (boot_a.bin, boot_b.bin, system_a.bin, system_b.bin, data.bin).
 func (w *wizard) restoreStock(ctx context.Context) (err error) {
