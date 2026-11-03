@@ -159,6 +159,51 @@ func (w *wizard) restore(ctx context.Context) (err error) {
 	w.line("  Отключите USB и подключите блок питания устройства.")
 	return nil
 }
+// restoreStock writes stock partitions from a plain stock/ folder next to the
+// program (boot_a.bin, boot_b.bin, system_a.bin, system_b.bin, data.bin).
+func (w *wizard) restoreStock(ctx context.Context) (err error) {
+	dir := filepath.Join(w.Home, "stock")
+	if info, e := os.Stat(dir); e != nil || !info.IsDir() {
+		return fmt.Errorf("возврат на сток недоступен: рядом с программой нужна папка stock с файлами boot_a.bin, boot_b.bin, system_a.bin, system_b.bin и data.bin")
+	}
+	w.line("  Образы из папки: " + appinfo.CleanDisplay(dir))
+	w.busy("Проверяем файлы стока")
+	s, err := restore.OpenRaw(ctx, dir)
+	if err != nil {
+		return err
+	}
+	for _, p := range s.Plan.Partitions {
+		w.line(fmt.Sprintf("  [OK] %s: %d МиБ", p.Name, p.Bytes>>20))
+	}
+	if s.Plan.PartialData {
+		w.line("  data.bin короче нормы (плохие блоки) и запишется как есть.")
+	}
+	w.line("\n  Эти образы не привязаны к этой колонке: программа не может проверить,")
+	w.line("  что они сняты с такой же платы. Ключи и калибровка колонки не меняются.")
+	w.line("  Текущая система (Alpine) и данные будут заменены.")
+	yes, err := w.confirm(ctx, "ВЕРНУТЬ СТОК?")
+	if err != nil || !yes {
+		return err
+	}
+	d, _, closeDevice, err := w.connect(ctx)
+	if err != nil {
+		return err
+	}
+	writer, ok := d.(restore.Device)
+	if !ok {
+		return errors.Join(errors.New("устройство не поддерживает восстановление"), closeDevice())
+	}
+	applyErr := s.Apply(ctx, writer, w.progress)
+	err = errors.Join(applyErr, closeDevice())
+	if err != nil {
+		return writeFailure(err)
+	}
+	w.completed = true
+	w.remember("Сток записан и проверен.")
+	w.line("\n  Сток записан и проверен.")
+	w.line("  Отключите USB и подключите блок питания устройства.")
+	return nil
+}
 func (w *wizard) flash(ctx context.Context) (err error) {
 	copies, err := w.backupDirectories()
 	if err != nil {

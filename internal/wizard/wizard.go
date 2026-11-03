@@ -121,6 +121,8 @@ func (w *wizard) runAction(ctx context.Context, action string) error {
 		return w.restore(ctx)
 	case appinfo.Flash:
 		return w.flash(ctx)
+	case appinfo.Stock:
+		return w.restoreStock(ctx)
 	default:
 		return fmt.Errorf("нет обработчика действия %q", action)
 	}

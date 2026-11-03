@@ -10,6 +10,7 @@ const (
 	Backup      = "backup"
 	Restore     = "restore"
 	Flash       = "flash"
+	Stock       = "stock"
 )
 
 type Action struct{ Name, Label, Title string }
@@ -20,6 +21,7 @@ func Actions() []Action {
 		{Backup, "Создать резервную копию", "Создание резервной копии"},
 		{Restore, "Восстановить из резервной копии", "Восстановление"},
 		{Flash, "Установить Alpine Linux", "Установка Alpine Linux"},
+		{Stock, "Вернуть сток из папки stock", "Возврат на сток"},
 	}
 }
 func Find(name string) (Action, bool) {
